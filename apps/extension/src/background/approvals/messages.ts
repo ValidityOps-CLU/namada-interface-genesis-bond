@@ -12,7 +12,9 @@ export enum MessageType {
   SubmitApprovedSignLedgerTx = "submit-approved-sign-ledger-tx",
   RejectSignArbitrary = "reject-sign-arbitrary",
   ConnectInterfaceResponse = "connect-interface-response",
+  DisconnectInterfaceResponse = "disconnect-interface-response",
   RevokeConnection = "revoke-connection",
+  SubmitUpdateDefaultAccount = "submit-update-default-account",
   QueryTxDetails = "query-tx-details",
   QuerySignArbitraryData = "query-sign-arbitrary-data",
   QueryPendingTxBytes = "query-pending-tx-bytes",
@@ -144,7 +146,6 @@ export class ConnectInterfaceResponseMsg extends Message<void> {
   }
 
   constructor(
-    public readonly interfaceTabId: number,
     public readonly interfaceOrigin: string,
     public readonly allowConnection: boolean
   ) {
@@ -152,11 +153,7 @@ export class ConnectInterfaceResponseMsg extends Message<void> {
   }
 
   validate(): void {
-    validateProps(this, [
-      "interfaceTabId",
-      "interfaceOrigin",
-      "allowConnection",
-    ]);
+    validateProps(this, ["interfaceOrigin", "allowConnection"]);
   }
 
   route(): string {
@@ -165,6 +162,31 @@ export class ConnectInterfaceResponseMsg extends Message<void> {
 
   type(): string {
     return ConnectInterfaceResponseMsg.type();
+  }
+}
+
+export class DisconnectInterfaceResponseMsg extends Message<void> {
+  public static type(): MessageType {
+    return MessageType.DisconnectInterfaceResponse;
+  }
+
+  constructor(
+    public readonly interfaceOrigin: string,
+    public readonly revokeConnection: boolean
+  ) {
+    super();
+  }
+
+  validate(): void {
+    validateProps(this, ["interfaceOrigin", "revokeConnection"]);
+  }
+
+  route(): string {
+    return ROUTE;
+  }
+
+  type(): string {
+    return DisconnectInterfaceResponseMsg.type();
   }
 }
 
@@ -187,6 +209,28 @@ export class RevokeConnectionMsg extends Message<void> {
 
   type(): string {
     return RevokeConnectionMsg.type();
+  }
+}
+
+export class SubmitUpdateDefaultAccountMsg extends Message<void> {
+  public static type(): MessageType {
+    return MessageType.SubmitUpdateDefaultAccount;
+  }
+
+  constructor(public readonly address: string) {
+    super();
+  }
+
+  validate(): void {
+    validateProps(this, ["address"]);
+  }
+
+  route(): string {
+    return ROUTE;
+  }
+
+  type(): string {
+    return SubmitUpdateDefaultAccountMsg.type();
   }
 }
 

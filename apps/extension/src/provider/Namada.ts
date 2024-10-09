@@ -12,14 +12,15 @@ import { MessageRequester, Ports } from "router";
 import { toEncodedTx } from "utils";
 import {
   ApproveConnectInterfaceMsg,
+  ApproveDisconnectInterfaceMsg,
   ApproveSignArbitraryMsg,
   ApproveSignTxMsg,
+  ApproveUpdateDefaultAccountMsg,
   CheckDurabilityMsg,
   GetChainMsg,
   IsConnectionApprovedMsg,
   QueryAccountsMsg,
   QueryDefaultAccountMsg,
-  UpdateDefaultAccountMsg,
   VerifyArbitraryMsg,
 } from "./messages";
 
@@ -33,6 +34,13 @@ export class Namada implements INamada {
     return await this.requester?.sendMessage(
       Ports.Background,
       new ApproveConnectInterfaceMsg()
+    );
+  }
+
+  public async disconnect(): Promise<void> {
+    return await this.requester?.sendMessage(
+      Ports.Background,
+      new ApproveDisconnectInterfaceMsg(location.origin)
     );
   }
 
@@ -64,7 +72,7 @@ export class Namada implements INamada {
   public async updateDefaultAccount(address: string): Promise<void> {
     return await this.requester?.sendMessage(
       Ports.Background,
-      new UpdateDefaultAccountMsg(address)
+      new ApproveUpdateDefaultAccountMsg(address)
     );
   }
 

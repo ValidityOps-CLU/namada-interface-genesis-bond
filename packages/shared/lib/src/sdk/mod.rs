@@ -23,7 +23,7 @@ use namada_sdk::hash::Hash;
 use namada_sdk::key::RefTo;
 use namada_sdk::key::{common, ed25519, SigScheme};
 use namada_sdk::masp::ShieldedContext;
-use namada_sdk::rpc::query_epoch;
+use namada_sdk::rpc::{query_epoch, InnerTxResult};
 use namada_sdk::signing::SigningTxData;
 use namada_sdk::string_encoding::Format;
 use namada_sdk::time::DateTimeUtc;
@@ -31,8 +31,10 @@ use namada_sdk::token::DenominatedAmount;
 use namada_sdk::tx::data::{pos, Fee, TxType};
 use namada_sdk::tx::{
     build_batch, build_bond, build_claim_rewards, build_ibc_transfer, build_redelegation,
+
     build_reveal_pk, build_transparent_transfer, build_unbond, build_vote_proposal, build_withdraw,
     process_tx, Code, Commitment, Data, ProcessTxResponse, Section, Tx,
+
 };
 use namada_sdk::wallet::{Store, Wallet};
 use namada_sdk::{Namada, NamadaImpl};
@@ -76,8 +78,8 @@ impl Sdk {
         Ok(js_sys::Boolean::from(has.as_bool().unwrap()).into())
     }
 
-    pub async fn fetch_and_store_masp_params() -> Result<(), JsValue> {
-        fetch_and_store_masp_params().await?;
+    pub async fn fetch_and_store_masp_params(url: Option<String>) -> Result<(), JsValue> {
+        fetch_and_store_masp_params(url).await?;
         Ok(())
     }
 
@@ -248,20 +250,12 @@ impl Sdk {
     // Broadcast Tx
     pub async fn process_tx(&self, tx_bytes: &[u8], tx_msg: &[u8]) -> Result<JsValue, JsError> {
         let args = args::tx_args_from_slice(tx_msg)?;
-
         let tx = Tx::try_from_slice(tx_bytes)?;
         let cmts = tx.commitments().clone();
-        let hash = tx.header_hash().to_string();
+        let wrapper_hash = tx.wrapper_hash();
         let resp = process_tx(&self.namada, &args, tx.clone()).await?;
 
         let mut batch_tx_results: Vec<tx::BatchTxResult> = vec![];
-
-        for cmt in cmts {
-            let response = resp.is_applied_and_valid(Some(&tx.header_hash()), &cmt);
-            let hash = cmt.get_hash().to_string();
-
-            batch_tx_results.push(tx::BatchTxResult::new(hash, response.is_some()));
-        }
 
         // Collect results and return
         match resp {
@@ -272,11 +266,33 @@ impl Sdk {
                 let info = tx_response.info.to_string();
                 let log = tx_response.log.to_string();
 
-                let response =
-                    tx::TxResponse::new(code, batch_tx_results, gas_used, hash, height, info, log);
+                for cmt in cmts {
+                    let hash = compute_inner_tx_hash(wrapper_hash.as_ref(), Either::Right(&cmt));
+
+                    if let Some(InnerTxResult::Success(_)) = tx_response.batch_result().get(&hash) {
+                        batch_tx_results.push(tx::BatchTxResult::new(hash.to_string(), true));
+                    } else {
+                        batch_tx_results.push(tx::BatchTxResult::new(hash.to_string(), false));
+                    }
+                }
+
+                let response = tx::TxResponse::new(
+                    code,
+                    batch_tx_results,
+                    gas_used,
+                    wrapper_hash.unwrap().to_string(),
+                    height,
+                    info,
+                    log,
+                );
                 to_js_result(borsh::to_vec(&response)?)
             }
-            _ => return Err(JsError::new(&format!("Tx not applied: {}", &hash))),
+            _ => {
+                return Err(JsError::new(&format!(
+                    "Tx not applied: {}",
+                    &wrapper_hash.unwrap().to_string()
+                )))
+            }
         }
     }
 
@@ -359,6 +375,38 @@ impl Sdk {
     ) -> Result<JsValue, JsError> {
         let mut args = args::transparent_transfer_tx_args(transfer_msg, wrapper_tx_msg)?;
         let (tx, signing_data) = build_transparent_transfer(&self.namada, &mut args).await?;
+        self.serialize_tx_result(tx, wrapper_tx_msg, signing_data)
+    }
+
+    pub async fn build_shielded_transfer(
+        &self,
+        shielded_transfer_msg: &[u8],
+        wrapper_tx_msg: &[u8],
+    ) -> Result<JsValue, JsError> {
+        let mut args = args::shielded_transfer_tx_args(shielded_transfer_msg, wrapper_tx_msg)?;
+        let (tx, signing_data) = build_shielded_transfer(&self.namada, &mut args).await?;
+        self.serialize_tx_result(tx, wrapper_tx_msg, signing_data)
+    }
+
+    pub async fn build_unshielding_transfer(
+        &self,
+        unshielding_transfer_msg: &[u8],
+        wrapper_tx_msg: &[u8],
+    ) -> Result<JsValue, JsError> {
+        let mut args =
+            args::unshielding_transfer_tx_args(unshielding_transfer_msg, wrapper_tx_msg)?;
+        let (tx, signing_data) = build_unshielding_transfer(&self.namada, &mut args).await?;
+        self.serialize_tx_result(tx, wrapper_tx_msg, signing_data)
+    }
+
+    pub async fn build_shielding_transfer(
+        &self,
+        shielding_transfer_msg: &[u8],
+        wrapper_tx_msg: &[u8],
+    ) -> Result<JsValue, JsError> {
+        let mut args = args::shielding_transfer_tx_args(shielding_transfer_msg, wrapper_tx_msg)?;
+        let (tx, signing_data, _masp_epoch) =
+            build_shielding_transfer(&self.namada, &mut args).await?;
         self.serialize_tx_result(tx, wrapper_tx_msg, signing_data)
     }
 
@@ -579,5 +627,5 @@ extern "C" {
     #[wasm_bindgen(catch, js_name = "hasMaspParams")]
     async fn has_masp_params() -> Result<JsValue, JsValue>;
     #[wasm_bindgen(catch, js_name = "fetchAndStoreMaspParams")]
-    async fn fetch_and_store_masp_params() -> Result<JsValue, JsValue>;
+    async fn fetch_and_store_masp_params(url: Option<String>) -> Result<JsValue, JsValue>;
 }

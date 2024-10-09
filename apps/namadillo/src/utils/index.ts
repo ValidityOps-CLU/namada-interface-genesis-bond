@@ -1,4 +1,5 @@
 import { ProposalStatus, ProposalTypeString } from "@namada/types";
+import BigNumber from "bignumber.js";
 import * as fns from "date-fns";
 import { DateTime } from "luxon";
 import { useEffect } from "react";
@@ -35,14 +36,15 @@ export const proposalIdToString = (proposalId: bigint): string =>
 
 export const useTransactionEventListener = <T extends keyof WindowEventMap>(
   event: T,
-  handler: (this: Window, ev: WindowEventMap[T]) => void
+  handler: (this: Window, ev: WindowEventMap[T]) => void,
+  deps: React.DependencyList = []
 ): void => {
   useEffect(() => {
     window.addEventListener(event, handler);
     return () => {
       window.removeEventListener(event, handler);
     };
-  }, []);
+  }, deps);
 };
 
 const secondsToDateTime = (seconds: bigint): DateTime =>
@@ -56,6 +58,11 @@ export const secondsToDateString = (seconds: bigint): string =>
 
 export const secondsToDateTimeString = (seconds: bigint): string =>
   `${secondsToDateString(seconds)}, ${secondsToTimeString(seconds)}`;
+
+export const sumBigNumberArray = (numbers: BigNumber[]): BigNumber => {
+  if (numbers.length === 0) return new BigNumber(0);
+  return BigNumber.sum(...numbers);
+};
 
 export const secondsToTimeRemainingString = (
   startTimeInSeconds: bigint,

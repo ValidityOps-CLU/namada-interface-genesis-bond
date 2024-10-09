@@ -9,11 +9,11 @@ import { namadaExtensionConnectedAtom } from "atoms/settings";
 import { atomsAreLoading, atomsAreNotInitialized } from "atoms/utils";
 import { allValidatorsAtom } from "atoms/validators";
 import BigNumber from "bignumber.js";
+import { useUserHasAccount } from "hooks/useUserHasAccount";
 import { useValidatorFilter } from "hooks/useValidatorFilter";
 import { useValidatorTableSorting } from "hooks/useValidatorTableSorting";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Validator } from "types";
 import { ValidatorAlias } from "./ValidatorAlias";
 import { ValidatorThumb } from "./ValidatorThumb";
@@ -31,13 +31,13 @@ export const AllValidatorsTable = ({
 }: AllValidatorsProps): JSX.Element => {
   const validators = useAtomValue(allValidatorsAtom);
   const isConnected = useAtomValue(namadaExtensionConnectedAtom);
-  const navigate = useNavigate();
-  const [filter, setFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const hasAccount = useUserHasAccount();
 
   const filteredValidators = useValidatorFilter({
     validators: validators.isSuccess ? validators.data : [],
     myValidatorsAddresses: [],
-    searchTerm: filter,
+    searchTerm,
     onlyMyValidators: false,
   });
 
@@ -114,14 +114,14 @@ export const AllValidatorsTable = ({
       <div className="min-h-[450px] flex flex-col">
         <div className="grid grid-cols-[40%_max-content] justify-between mb-5">
           <Search
-            onChange={(value: string) => setFilter(value)}
+            onChange={(value: string) => setSearchTerm(value)}
             placeholder="Search Validator"
           />
-          {isConnected && (
+          {isConnected && hasAccount && (
             <ActionButton
               size="sm"
               backgroundColor="cyan"
-              onClick={() => navigate(StakingRoutes.incrementBonding().url)}
+              href={StakingRoutes.incrementBonding().url}
             >
               Stake
             </ActionButton>

@@ -120,14 +120,12 @@ const TypeLabel: React.FC<{
 const JsonButton: React.FC<{
   proposalId: bigint;
 }> = ({ proposalId }) => {
-  const navigate = useNavigate();
-
   return (
     <ActionButton
       className="px-3 py-2"
       size="xs"
       outlineColor="white"
-      onClick={() => navigate(GovernanceRoutes.viewJson(proposalId).url)}
+      href={GovernanceRoutes.viewJson(proposalId).url}
     >
       <span className="flex text-xs justify-between gap-2">
         <VscJson />
@@ -291,7 +289,7 @@ const ProgressBar: React.FC<{
 
 const VoteButton: React.FC<{
   proposal: AtomWithQueryResult<Proposal>;
-  vote: AtomWithQueryResult<VoteType | undefined>;
+  vote: AtomWithQueryResult<VoteType | null>;
   proposalId: bigint;
 }> = ({ proposal, vote, proposalId }) => {
   const navigate = useNavigate();
@@ -317,7 +315,7 @@ const VoteButton: React.FC<{
       const disabled =
         !isExtensionConnected || !canVote.data || status !== "ongoing";
 
-      const voted = typeof vote.data !== "undefined";
+      const voted = vote.data !== null;
       const text = voted ? "Edit Vote" : "Vote";
 
       return {
@@ -344,9 +342,9 @@ const VoteButton: React.FC<{
 };
 
 const VotedLabel: React.FC<{
-  vote: AtomWithQueryResult<VoteType | undefined>;
+  vote: AtomWithQueryResult<VoteType | null>;
 }> = ({ vote }) => {
-  if (vote.isSuccess && typeof vote.data !== "undefined") {
+  if (vote.isSuccess && vote.data !== null) {
     return (
       <VotedLabelComponent vote={vote.data} className="text-xs min-w-22" />
     );

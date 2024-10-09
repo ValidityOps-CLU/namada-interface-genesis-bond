@@ -20,9 +20,10 @@ enum MessageType {
   ApproveSignArbitrary = "approve-sign-arbitrary",
   IsConnectionApproved = "is-connection-approved",
   ApproveConnectInterface = "approve-connect-interface",
+  ApproveDisconnectInterface = "approve-disconnect-interface",
   QueryAccounts = "query-accounts",
   QueryDefaultAccount = "query-default-account",
-  UpdateDefaultAccount = "update-default-account",
+  ApproveUpdateDefaultAccount = "approve-update-default-account",
   EncodeRevealPublicKey = "encode-reveal-public-key",
   GetChain = "get-chain",
   GetChains = "get-chains",
@@ -134,6 +135,28 @@ export class ApproveConnectInterfaceMsg extends Message<void> {
   }
 }
 
+export class ApproveDisconnectInterfaceMsg extends Message<void> {
+  public static type(): MessageType {
+    return MessageType.ApproveDisconnectInterface;
+  }
+
+  constructor(public readonly originToRevoke: string) {
+    super();
+  }
+
+  validate(): void {
+    validateProps(this, ["originToRevoke"]);
+  }
+
+  route(): string {
+    return Route.Approvals;
+  }
+
+  type(): string {
+    return ApproveDisconnectInterfaceMsg.type();
+  }
+}
+
 export class GetChainMsg extends Message<Chain> {
   public static type(): MessageType {
     return MessageType.GetChain;
@@ -208,9 +231,9 @@ export class QueryDefaultAccountMsg extends Message<
   }
 }
 
-export class UpdateDefaultAccountMsg extends Message<void> {
+export class ApproveUpdateDefaultAccountMsg extends Message<void> {
   public static type(): MessageType {
-    return MessageType.UpdateDefaultAccount;
+    return MessageType.ApproveUpdateDefaultAccount;
   }
 
   constructor(public readonly address: string) {
@@ -222,11 +245,11 @@ export class UpdateDefaultAccountMsg extends Message<void> {
   }
 
   route(): string {
-    return Route.KeyRing;
+    return Route.Approvals;
   }
 
   type(): string {
-    return UpdateDefaultAccountMsg.type();
+    return ApproveUpdateDefaultAccountMsg.type();
   }
 }
 

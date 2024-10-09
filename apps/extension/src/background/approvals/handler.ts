@@ -1,12 +1,15 @@
 import {
   ApproveConnectInterfaceMsg,
+  ApproveDisconnectInterfaceMsg,
   ApproveSignArbitraryMsg,
   ApproveSignTxMsg,
+  ApproveUpdateDefaultAccountMsg,
   IsConnectionApprovedMsg,
 } from "provider";
 import { Env, Handler, InternalHandler, Message } from "router";
 import {
   ConnectInterfaceResponseMsg,
+  DisconnectInterfaceResponseMsg,
   QueryPendingTxBytesMsg,
   QuerySignArbitraryDataMsg,
   QueryTxDetailsMsg,
@@ -16,6 +19,7 @@ import {
   SubmitApprovedSignArbitraryMsg,
   SubmitApprovedSignLedgerTxMsg,
   SubmitApprovedSignTxMsg,
+  SubmitUpdateDefaultAccountMsg,
 } from "./messages";
 import { ApprovalsService } from "./service";
 
@@ -37,10 +41,30 @@ export const getHandler: (service: ApprovalsService) => Handler = (service) => {
           env,
           msg as ConnectInterfaceResponseMsg
         );
+      case ApproveDisconnectInterfaceMsg:
+        return handleApproveDisconnectInterfaceMsg(service)(
+          env,
+          msg as ApproveDisconnectInterfaceMsg
+        );
+      case DisconnectInterfaceResponseMsg:
+        return handleDisconnectInterfaceResponseMsg(service)(
+          env,
+          msg as DisconnectInterfaceResponseMsg
+        );
       case RevokeConnectionMsg:
         return handleRevokeConnectionMsg(service)(
           env,
           msg as RevokeConnectionMsg
+        );
+      case ApproveUpdateDefaultAccountMsg:
+        return handleApproveUpdateDefaultAccountMsg(service)(
+          env,
+          msg as ApproveUpdateDefaultAccountMsg
+        );
+      case SubmitUpdateDefaultAccountMsg:
+        return handleSubmitUpdateDefaultAccountMsg(service)(
+          env,
+          msg as SubmitUpdateDefaultAccountMsg
         );
       case ApproveSignTxMsg:
         return handleApproveSignTxMsg(service)(env, msg as ApproveSignTxMsg);
@@ -101,8 +125,8 @@ const handleIsConnectionApprovedMsg: (
 const handleApproveConnectInterfaceMsg: (
   service: ApprovalsService
 ) => InternalHandler<ApproveConnectInterfaceMsg> = (service) => {
-  return async ({ senderTabId: interfaceTabId }, { origin }) => {
-    return await service.approveConnection(interfaceTabId, origin);
+  return async (_, { origin }) => {
+    return await service.approveConnection(origin);
   };
 };
 
@@ -111,13 +135,35 @@ const handleConnectInterfaceResponseMsg: (
 ) => InternalHandler<ConnectInterfaceResponseMsg> = (service) => {
   return async (
     { senderTabId: popupTabId },
-    { interfaceTabId, interfaceOrigin, allowConnection }
+    { interfaceOrigin, allowConnection }
   ) => {
     return await service.approveConnectionResponse(
-      interfaceTabId,
+      popupTabId,
       interfaceOrigin,
-      allowConnection,
-      popupTabId
+      allowConnection
+    );
+  };
+};
+
+const handleApproveDisconnectInterfaceMsg: (
+  service: ApprovalsService
+) => InternalHandler<ApproveDisconnectInterfaceMsg> = (service) => {
+  return async (_, { origin }) => {
+    return await service.approveDisconnection(origin);
+  };
+};
+
+const handleDisconnectInterfaceResponseMsg: (
+  service: ApprovalsService
+) => InternalHandler<DisconnectInterfaceResponseMsg> = (service) => {
+  return async (
+    { senderTabId: popupTabId },
+    { interfaceOrigin, revokeConnection }
+  ) => {
+    return await service.approveDisconnectionResponse(
+      popupTabId,
+      interfaceOrigin,
+      revokeConnection
     );
   };
 };
@@ -127,6 +173,22 @@ const handleRevokeConnectionMsg: (
 ) => InternalHandler<RevokeConnectionMsg> = (service) => {
   return async (_, { originToRevoke }) => {
     return await service.revokeConnection(originToRevoke);
+  };
+};
+
+const handleApproveUpdateDefaultAccountMsg: (
+  service: ApprovalsService
+) => InternalHandler<ApproveUpdateDefaultAccountMsg> = (service) => {
+  return async (_, { address }) => {
+    return await service.approveUpdateDefaultAccount(address);
+  };
+};
+
+const handleSubmitUpdateDefaultAccountMsg: (
+  service: ApprovalsService
+) => InternalHandler<SubmitUpdateDefaultAccountMsg> = (service) => {
+  return async ({ senderTabId: popupTabId }, { address }) => {
+    return await service.submitUpdateDefaultAccount(popupTabId, address);
   };
 };
 

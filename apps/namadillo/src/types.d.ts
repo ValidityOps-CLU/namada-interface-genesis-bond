@@ -3,7 +3,7 @@ import {
   Unbond as IndexerUnbond,
   ValidatorStatus,
 } from "@anomaorg/namada-indexer-client";
-import { ChainKey, ExtensionKey } from "@namada/types";
+import { ChainKey, ClaimRewardsMsgValue, ExtensionKey } from "@namada/types";
 import BigNumber from "bignumber.js";
 
 declare module "*.module.css" {
@@ -78,6 +78,8 @@ export type Validator = Unique & {
   status: ValidatorStatus;
 };
 
+export type ValidatorFilterOptions = "all" | "active" | ValidatorStatus;
+
 export type UnbondEntry = Omit<
   | (IndexerUnbond & {
       timeLeft: string;
@@ -125,10 +127,22 @@ export type RedelegateChange = {
   amount: BigNumber;
 };
 
+export type ClaimRewardsProps = {
+  account: Account;
+  params: ClaimRewardsMsgValue[];
+  gasConfig: GasConfig;
+};
+
+export type BuildTxAtomParams<T> = {
+  account: Account;
+  params: T[];
+  gasConfig: GasConfig;
+};
+
 export type TxKind =
   | "Bond"
   | "Unbond"
-  | "Redelegation"
+  | "Redelegate"
   | "Withdraw"
   | "ClaimRewards"
   | "VoteProposal"
@@ -141,9 +155,10 @@ export type SortedColumnPair<T> = [id: T, SortOptions] | undefined;
 
 export type ToastNotification = {
   id: string;
-  type: "pending" | "success" | "error";
+  type: "pending" | "success" | "partialSuccess" | "error";
   title: React.ReactNode;
   description: React.ReactNode;
+  failedDescription?: React.ReactNode;
   details?: React.ReactNode;
   timeout?: number;
 };
@@ -151,3 +166,24 @@ export type ToastNotification = {
 export type ToastNotificationEntryFilter = (
   notification: ToastNotification
 ) => boolean;
+
+export type Provider = {
+  name: string;
+  iconUrl: string;
+  connected: boolean;
+};
+
+export type Chain = {
+  chainId: string;
+  name: string;
+  iconUrl: string;
+};
+
+export type Asset = {
+  chain: Chain;
+  name: string;
+  iconUrl: string;
+  denomination: string;
+  minimalDenomination: string;
+  decimals: number;
+};

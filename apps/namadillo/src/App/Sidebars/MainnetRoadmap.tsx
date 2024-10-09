@@ -1,8 +1,12 @@
 import { ActionButton, Image } from "@namada/components";
+import { applicationFeaturesAtom } from "atoms/settings";
 import clsx from "clsx";
+import { useAtomValue } from "jotai";
 import { FaCircleCheck } from "react-icons/fa6";
 
 const MainnetRoadmap = (): JSX.Element => {
+  const { claimRewardsEnabled } = useAtomValue(applicationFeaturesAtom);
+
   const renderPhase = (
     phaseNumber: string,
     name: React.ReactNode,
@@ -47,24 +51,22 @@ const MainnetRoadmap = (): JSX.Element => {
         )}
         {renderPhase(
           "2",
-          <>
-            Proof of Stake Rewards
-            <br />
-            PGF Inflation
-          </>,
-          "opacity-25"
+          <>Staking Rewards</>,
+          claimRewardsEnabled ? "opacity-100" : "opacity-25",
+          claimRewardsEnabled
         )}
+        {renderPhase("2", <></>, "opacity-25")}
         {renderPhase(
           "3",
           <>
-            MASP Enabled
-            <br />
             IBC Transfers
+            <br />
+            MASP Enabled
           </>,
           "opacity-25"
         )}
-        {renderPhase("4", "Shielded Rewards", "opacity-25")}
-        {renderPhase("5", "NAM Transfers", "opacity-25")}
+        {renderPhase("4", "Shielding Rewards", "opacity-25")}
+        {renderPhase("5", "NAM Transfers enabled", "opacity-25")}
       </ul>
       <ActionButton
         className="max-w-40 mt-6"

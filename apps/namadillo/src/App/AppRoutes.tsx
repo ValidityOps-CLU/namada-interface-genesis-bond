@@ -1,4 +1,5 @@
 import { Router } from "@remix-run/router";
+import { useAtomValue } from "jotai";
 import {
   Route,
   Routes,
@@ -11,21 +12,31 @@ import { AccountOverview } from "./AccountOverview";
 import { App } from "./App";
 import { RouteErrorBoundary } from "./Common/RouteErrorBoundary";
 import { Governance } from "./Governance";
+import { Ibc } from "./Ibc";
 import { SettingsPanel } from "./Settings/SettingsPanel";
 import { Staking } from "./Staking";
-import { SwitchAccountModal } from "./SwitchAccount/SwitchAccountModal";
+import { SwitchAccountPanel } from "./SwitchAccount/SwitchAccountPanel";
+
 
 import { Genesis } from "./Genesis/Genesis";
+
+import { applicationFeaturesAtom } from "atoms/settings";
+
 import GovernanceRoutes from "./Governance/routes";
+import IbcRoutes from "./Ibc/routes";
 import SettingsRoutes from "./Settings/routes";
 import { SignMessages } from "./SignMessages/SignMessages";
 import MessageRoutes from "./SignMessages/routes";
+import { StakingRewards } from "./Staking/StakingRewards";
 import StakingRoutes from "./Staking/routes";
 import SwitchAccountRoutes from "./SwitchAccount/routes";
+import { Transfer } from "./Transfer/Transfer";
+import TransferRoutes from "./Transfer/routes";
 
 export const MainRoutes = (): JSX.Element => {
   const location = useLocation();
   const state = location.state as { backgroundLocation?: Location };
+  const features = useAtomValue(applicationFeaturesAtom);
 
   // Avoid animation being fired twice when navigating inside settings modal routes
   const settingsAnimationKey =
@@ -43,7 +54,9 @@ export const MainRoutes = (): JSX.Element => {
             path={`${GovernanceRoutes.index()}/*`}
             element={<Governance />}
           />
+
           <Route path={`genesis`} element={<Genesis />} />
+
         </Route>
       </Routes>
       <Routes location={location} key={settingsAnimationKey}>
@@ -54,13 +67,17 @@ export const MainRoutes = (): JSX.Element => {
         />
         <Route
           path={`${SwitchAccountRoutes.index()}/*`}
-          element={<SwitchAccountModal />}
+          element={<SwitchAccountPanel />}
           errorElement={<RouteErrorBoundary />}
         />
         <Route
           path={`${MessageRoutes.index()}/*`}
           element={<SignMessages />}
           errorElement={<RouteErrorBoundary />}
+        />
+        <Route
+          path={`${StakingRoutes.claimRewards().url}`}
+          element={<StakingRewards />}
         />
       </Routes>
       <ScrollRestoration />
