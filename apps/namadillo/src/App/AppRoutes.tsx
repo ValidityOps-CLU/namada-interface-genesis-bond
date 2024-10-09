@@ -17,7 +17,11 @@ import { SettingsPanel } from "./Settings/SettingsPanel";
 import { Staking } from "./Staking";
 import { SwitchAccountPanel } from "./SwitchAccount/SwitchAccountPanel";
 
+
+import { Genesis } from "./Genesis/Genesis";
+
 import { applicationFeaturesAtom } from "atoms/settings";
+
 import GovernanceRoutes from "./Governance/routes";
 import IbcRoutes from "./Ibc/routes";
 import SettingsRoutes from "./Settings/routes";
@@ -50,10 +54,9 @@ export const MainRoutes = (): JSX.Element => {
             path={`${GovernanceRoutes.index()}/*`}
             element={<Governance />}
           />
-          <Route path={`${TransferRoutes.index()}/*`} element={<Transfer />} />
-          {features.ibcTransfersEnabled && (
-            <Route path={`${IbcRoutes.index()}/*`} element={<Ibc />} />
-          )}
+
+          <Route path={`genesis`} element={<Genesis />} />
+
         </Route>
       </Routes>
       <Routes location={location} key={settingsAnimationKey}>

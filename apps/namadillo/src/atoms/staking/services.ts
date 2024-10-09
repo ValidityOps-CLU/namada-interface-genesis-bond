@@ -32,6 +32,13 @@ export const createBondTx = async (
   gasConfig: GasConfig
 ): Promise<TransactionPair<BondProps> | undefined> => {
   const { tx } = await getSdkInstance();
+
+  const bondProps = getStakingChangesParams(
+    account,
+    chain.nativeTokenAddress,
+    changes
+  );
+
   const transactionPairs = await buildTxPair(
     account,
     gasConfig,

@@ -31,6 +31,7 @@ import {
   TxDetailsMsgValue,
   TxMsgValue,
   TxProps,
+  TxSignatureResponse,
   UnbondMsgValue,
   UnbondProps,
   UnshieldingTransferMsgValue,
@@ -180,11 +181,19 @@ export class Tx {
     const bondMsg = new Message<BondMsgValue>();
     const encodedWrapperArgs = this.encodeTxArgs(wrapperTxProps);
     const encodedBond = bondMsg.encode(new BondMsgValue(bondProps));
-    const serializedTx = await this.sdk.build_bond(
+    const serializedTx = await this.sdk.build_genesis_bond(
       encodedBond,
       encodedWrapperArgs
     );
     return deserialize(Buffer.from(serializedTx), TxMsgValue);
+  }
+
+  async getTxSignature(
+    txBytes: Uint8Array,
+    pubkey: string
+  ): Promise<TxSignatureResponse> {
+    const response = await this.sdk.get_tx_signature(txBytes, pubkey);
+    return deserialize(Buffer.from(response), TxSignatureResponse);
   }
 
   /**
