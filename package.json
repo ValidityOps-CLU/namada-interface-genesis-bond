@@ -3,9 +3,7 @@
   "version": "0.2.4",
   "private": true,
   "workspaces": [
-    "apps/namadillo",
     "apps/extension",
-    "apps/faucet",
     "apps/genesis-bond",
     "packages/*",
     "e2e"
