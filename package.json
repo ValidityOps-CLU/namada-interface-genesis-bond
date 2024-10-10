@@ -3,6 +3,7 @@
   "version": "0.2.4",
   "private": true,
   "workspaces": [
+    "apps/namadillo",
     "apps/extension",
     "apps/genesis-bond",
     "packages/*",
