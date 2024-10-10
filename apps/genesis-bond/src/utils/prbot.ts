@@ -50,7 +50,7 @@ export const submitToPRBot = async (
     // Step 4: Prepare the request payload
     const payload = {
       owner: "ValidityOps",
-      repo: "namada-bond",
+      repo: "namada-mainnet-genesis",
       title: prTitle,
       commit: commitMessage,
       branch: branchName,
@@ -60,7 +60,7 @@ export const submitToPRBot = async (
 
     // Step 5: Send the POST request to your API route
     const response = await axios.post(
-      "https://namada-bond-api.vercel.app/api/bond",
+      "https://namada-bond-api.metasig.workers.dev/",
       payload,
       {
         headers: {
